@@ -26,70 +26,40 @@ DB_IP = None
 DB_PORT = None
 DB_USER = None
 DB_PASSWORD = None
-DB_NAME = 'alpha_gasu'
+DB_NAME = 'alpha'
 
-ALPHA_TABLES = ['alpha_cp_fp',
-                'alpha_cp_fp_not_np',
-                'alpha_cp_vp_kpm',
-                'alpha_ind_fp',
-                'alpha_ind_fp_not_np',
-                'alpha_ind_gp_se',
-                'alpha_ind_np',
-                'alpha_is_ind_fp',
-                'alpha_is_res_fp',
-                'alpha_res_fp',
-                'alpha_res_fp_not_np',
-                'alpha_res_vp_kpm',
+# Your list of tables
+TABLES = ['tables'
                 ]
 
+# Corresponding fields in tables for searching by id
 ID_COLUMNS = {
-    'alpha_cp_fp': 'cp_id',
-    'alpha_cp_fp_not_np': 'cp_id',
-    'alpha_cp_vp_kpm': 'cp_id',
-    'alpha_ind_fp': 'np_ind_fp',
-    'alpha_ind_fp_not_np': 'fp_ind_id',
-    'alpha_ind_gp_se': 'ind_id',
-    'alpha_ind_np': 'np_ind_id',
-    'alpha_is_ind_fp': 'fp_ind_id',
-    'alpha_is_res_fp': 'res_id',
-    'alpha_res_fp': 'res_id',
-    'alpha_res_fp_not_np': 'res_id',
-    'alpha_res_vp_kpm': 'res_id',
+    'tables': 'id'
     }
 
+# Corresponding fields in tables for searching by keywords
 NAME_COLUMNS = {
-    'alpha_cp_fp': ['res_name'],
-    'alpha_cp_fp_not_np': ['res_fp_name'],
-    'alpha_cp_vp_kpm': ['res_name'],
-    'alpha_ind_fp': ['ind_name'],
-    'alpha_ind_fp_not_np': ['ind_name'],
-    'alpha_ind_gp_se': ['ind_name'],
-    'alpha_ind_np': ['np_ind_name'],
-    'alpha_is_ind_fp': ['ind_name'],
-    'alpha_is_res_fp': ['res_name'],
-    'alpha_res_fp': ['res_name'],
-    'alpha_res_fp_not_np': ['res_name'],
-    'alpha_res_vp_kpm': ['res_name'],
+    'tables': ['name']
 }
 
 
 @alpha_query.get('/api/query/by-id/{id}')
 async def alpha_query_id(id: str, alpha_table: str | None = None) -> JSONResponse:
     if alpha_table is not None:
-        alpha_tables = [t.strip() for t in alpha_table.split(',') if t.strip() in ALPHA_TABLES]
+        alpha_tables = [t.strip() for t in alpha_table.split(',') if t.strip() in TABLES]
         if not alpha_tables:
             return JSONResponse(
                 status_code=400,
-                content={'message': 'Некорректный список таблиц. Доступные таблицы: ' + ', '.join(ALPHA_TABLES)}
+                content={'message': 'Некорректный список таблиц. Доступные таблицы: ' + ', '.join(TABLES)}
             )
     else:
-        alpha_tables = ALPHA_TABLES
+        tables = TABLES
 
     try:
         response = {}
         connection = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_IP}:{DB_PORT}/{DB_NAME}')
 
-        for table in alpha_tables:
+        for table in tables:
             query = text(f'SELECT * FROM {table} WHERE {ID_COLUMNS[table]} = :id')
             records = pd.read_sql(query, connection, params={'id': id})
 
@@ -106,8 +76,8 @@ async def alpha_query_id(id: str, alpha_table: str | None = None) -> JSONRespons
             status_code=200,
             content={
                 'data': response,
-                'searched_tables': alpha_tables,
-                'total_tables_searched': len(alpha_tables)
+                'searched_tables': tables,
+                'total_tables_searched': len(tables)
             }
         )
 
@@ -118,34 +88,34 @@ async def alpha_query_id(id: str, alpha_table: str | None = None) -> JSONRespons
                 'message': 'Внутренняя ошибка сервера',
                 'error': str(error),
                 'traceback': format_exc(),
-                'requested_tables': alpha_tables
+                'requested_tables': tables
             }
         )
 
 
 @alpha_query.get('/api/query/by-name/{name}')
-async def alpha_query_name(name: str, alpha_table: str | None = None) -> JSONResponse:
+async def alpha_query_name(name: str, table: str | None = None) -> JSONResponse:
     if len(name) < 2:
         return JSONResponse(
             status_code=400,
             content={'message': 'Поисковый запрос должен содержать минимум 2 символа'}
         )
 
-    if alpha_table is not None:
-        alpha_tables = [t.strip() for t in alpha_table.split(',') if t.strip() in ALPHA_TABLES]
+    if table is not None:
+        alpha_tables = [t.strip() for t in table.split(',') if t.strip() in TABLES]
         if not alpha_tables:
             return JSONResponse(
                 status_code=400,
-                content={'message': 'Некорректный список таблиц. Доступные таблицы: ' + ', '.join(ALPHA_TABLES)}
+                content={'message': 'Некорректный список таблиц. Доступные таблицы: ' + ', '.join(TABLES)}
             )
     else:
-        alpha_tables = ALPHA_TABLES
+        tables = TABLES
 
     try:
         response = {}
         connection = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_IP}:{DB_PORT}/{DB_NAME}')
 
-        for table in alpha_tables:
+        for table in tables:
             columns = NAME_COLUMNS.get(table, [])
             if not columns:
                 continue
@@ -164,7 +134,7 @@ async def alpha_query_name(name: str, alpha_table: str | None = None) -> JSONRes
                 status_code=404,
                 content={
                     'message': f'Данные по запросу "{name}" не найдены',
-                    'searched_tables': alpha_tables
+                    'searched_tables': tables
                 }
             )
 
@@ -172,7 +142,7 @@ async def alpha_query_name(name: str, alpha_table: str | None = None) -> JSONRes
             status_code=200,
             content={
                 'data': response,
-                'searched_tables': alpha_tables,
+                'searched_tables': tables,
                 'total_matches': sum(len(v) for v in response.values())
             }
         )
@@ -184,7 +154,7 @@ async def alpha_query_name(name: str, alpha_table: str | None = None) -> JSONRes
                 'message': 'Внутренняя ошибка сервера',
                 'error': str(e),
                 'traceback': format_exc(),
-                'requested_tables': alpha_tables
+                'requested_tables': tables
             }
         )
 

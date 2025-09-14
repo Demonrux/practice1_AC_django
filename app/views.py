@@ -31,19 +31,9 @@ def validate_name(search_name):
 
 
 def search_view(request):
+    ## Your list of tables
     tables = [
-        'alpha_cp_fp',
-        'alpha_cp_fp_not_np',
-        'alpha_cp_vp_kpm',
-        'alpha_ind_fp',
-        'alpha_ind_fp_not_np',
-        'alpha_ind_gp_se',
-        'alpha_ind_np',
-        'alpha_is_ind_fp',
-        'alpha_is_res_fp',
-        'alpha_res_fp',
-        'alpha_res_fp_not_np',
-        'alpha_res_vp_kpm',
+        'tables'
     ]
 
     if request.method == "POST":
@@ -56,7 +46,7 @@ def search_view(request):
                 validate_id(search_query)
                 response = requests.get(
                     f"{API_URL}/by-id/{search_query}",
-                    params={'alpha_table': ','.join(selected_tables)},
+                    params={'table': ','.join(selected_tables)},
                     timeout=10
                 )
             else:
@@ -64,7 +54,7 @@ def search_view(request):
                 decoded_query = unquote(search_query)
                 response = requests.get(
                     f"{API_URL}/by-name/{decoded_query}",
-                    params={'alpha_table': ','.join(selected_tables)},
+                    params={'table': ','.join(selected_tables)},
                     timeout=100
                 )
 
@@ -105,16 +95,10 @@ def search_view(request):
                     else:
                         has_empty_date = True
 
+                    ##Your columns for grouping
                     grouped_data.setdefault(table_name, {}).setdefault(date, {}).setdefault(realization_date, []).append({
                         'num': record.get('num', '-'),
-                        'fp_code': record.get('fp_code', '-'),
-                        'res_id_value': record.get('res_id_value', '-'),
-                        'res_name': record.get('res_name', '-'),
-                        'cp_name': record.get('cp_name', '-'),
-                        'ind_name': record.get('ind_name', '-'),
-                        'date': date,
-                        'realization_year': realization_date,
-                        'source_table': table_name
+                        'date': date
                     })
 
             if not grouped_data:

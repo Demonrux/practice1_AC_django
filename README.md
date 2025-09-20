@@ -65,7 +65,15 @@ project/
 │   ├── urls.py          
 │   └── templates/
 │       ├── search.html   
-│       └── results.html  
+│       └── results.html
+|   └── static/
+|       └── app/
+|            ├── js/
+|              ├── results_script.js
+|              └── search_script.js
+|            └── css/
+|               ├── results.css
+|              └── search.css        
 ├── config/
 │   ├── settings.py      
 │   ├── urls.py         

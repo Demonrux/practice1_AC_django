@@ -1,4 +1,5 @@
 # Система для поиска и анализа данных из базы данных PostgreSQL через веб-интерфейс.
+<img width="700" height="500" alt="image" src="https://github.com/user-attachments/assets/c2d6e6f3-3c21-4142-ab88-b0c397a8c5eb" />
 
 ## Структура проекта
 ### Проект состоит из двух основных компонентов:
